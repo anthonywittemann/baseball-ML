@@ -18,11 +18,13 @@ statTypes = {'STD-BATTING': 0, 'STD-PITCHING': 1, 'ADV-BATTING': 2, 'ADV-PITCHIN
 #############          PREPROCESSING        ##############
 ##########################################################
 def parseSTD_Batting(dataset):
-	# arrays to return
-	playerStats = -1.0 * np.ones((len(dataset), len(dataset[0])))[:25]
-	playerInfo = -1.0 * np.ones((len(dataset), len(dataset[0])))[:5]
-	print 'playerStats: {0}'.format(playerStats)
-	print 'playerInfo: {0}'.format(playerInfo)
+	# arrays to 
+	print type(dataset)
+	# have had to hard code number of players - FIX LATER
+	playerStats = -1.0 * np.ones((1600,25))
+	playerInfo = np.empty((1600,5), dtype='|S30') # hopefully no players with names > 30 chars
+	#print 'playerStats: {0}'.format(playerStats)
+	#print 'playerInfo: {0}'.format(playerInfo)
 	statLabels = []
 	infoLabels = []
 	
@@ -46,17 +48,17 @@ def parseSTD_Batting(dataset):
 			#grab player info and stats only for players with full stats
 			elif dataset[i][0] != 'Rk' and len(dataset[i]) == 30:
 				playerInfo[playerNum] = [str(dataset[i][j]) for j in infoIndices]
-				print 'playerInfo: {0}'.format(playerInfo)
+				#print 'playerInfo: {0}'.format(playerInfo)
 				
 				# tried assignment with list compression but wasn't able to hadle blank entries
 				#playerStats[playerNum] = [float(dataset[i][j]) for j in statIndices if dataset[i][j].isdigit()]
 				
- 				for j in statIndices:
- 					if dataset[i][j].isdigit():
- 						playerStats[playerNum][j] = dataset[i][j]
+ 				for j in range(len(statIndices)):
+ 					if dataset[i][statIndices[j]].isdigit():
+ 						playerStats[playerNum][j] = dataset[i][statIndices[j]]
 
  				playerNum += 1
- 				print 'playerStats: {0}'.format(playerStats)
+ 				#print 'playerStats: {0}'.format(playerStats)
  				
 		
 
