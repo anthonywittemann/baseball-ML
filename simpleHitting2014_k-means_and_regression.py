@@ -19,7 +19,7 @@ statTypes = {'STD-BATTING': 0, 'STD-PITCHING': 1, 'ADV-BATTING': 2, 'ADV-PITCHIN
 ##########################################################
 def parseSTD_Batting(dataset):
 	# arrays to 
-	print type(dataset)
+	#print type(dataset)
 	# have had to hard code number of players - FIX LATER
 	playerStats = -1.0 * np.ones((1600,25))
 	playerInfo = np.empty((1600,5), dtype='|S30') # hopefully no players with names > 30 chars
@@ -59,8 +59,8 @@ def parseSTD_Batting(dataset):
 
  				playerNum += 1
  				#print 'playerStats: {0}'.format(playerStats)
- 				
-		
+
+
 
 	return playerStats, statLabels, playerInfo, infoLabels
 
@@ -101,7 +101,3 @@ def loadCsv(filename, statType=0):
 filename = 'data/std-batting-2014.csv'
 playerStats, statLabels, playerInfo, infoLabels = loadCsv(filename, 0)
 print('Loaded data file {0} with {1} players').format(filename, len(playerStats))
-
-
-
-
