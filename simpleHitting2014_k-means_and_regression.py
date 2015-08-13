@@ -20,22 +20,22 @@ statTypes = {'STD-BATTING': 0, 'STD-PITCHING': 1, 'ADV-BATTING': 2, 'ADV-PITCHIN
 #############          PREPROCESSING        ##############
 ##########################################################
 def parseSTD_Batting(dataset):
-	# arrays to 
-	#print type(dataset)
-	# have had to hard code number of players - FIX LATER
-	playerStats = -1.0 * np.ones((1600,25))
-	playerInfo = np.empty((1600,5), dtype='|S30') # hopefully no players with names > 30 chars
+    # arrays to
+    # print type(dataset)
+    # have had to hard code number of players - FIX LATER
+    playerStats = -1.0 * np.ones((1600,25))
+    playerInfo = np.empty((1600,5), dtype='|S30') # hopefully no players with names > 30 chars
 	#print 'playerStats: {0}'.format(playerStats)
 	#print 'playerInfo: {0}'.format(playerInfo)
-	statLabels = []
-	infoLabels = []
-	
-	# Rk,Name,Age,Tm,Lg,G,PA,AB,R,H,2B,3B,HR,RBI,SB,CS,BB,SO,BA,OBP,SLG,OPS,OPS+,TB,GDP,HBP,SH,SF,IBB,Pos Summary
-	statIndices = [0,2,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
-	infoIndices = [1,3,4,5,29]
+    statLabels = []
+    infoLabels = []
 
-	playerNum = 0
-	for i in range(len(dataset)):
+	# Rk,Name,Age,Tm,Lg,G,PA,AB,R,H,2B,3B,HR,RBI,SB,CS,BB,SO,BA,OBP,SLG,OPS,OPS+,TB,GDP,HBP,SH,SF,IBB,Pos Summary
+    statIndices = [0,2,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    infoIndices = [1,3,4,5,29]
+
+    playerNum = 0
+    for i in range(len(dataset)):
 		#print dataset[i]
 
 		if len(dataset[i]) != 0: # skip over blank lines
@@ -64,19 +64,16 @@ def parseSTD_Batting(dataset):
 
 
 
-	return playerStats, statLabels, playerInfo, infoLabels
+    return playerStats, statLabels, playerInfo, infoLabels
 
 # TODO - implement
-def parseSTD_Pitching(dataset):
-	pass
+def parseSTD_Pitching(dataset): pass
 
 # TODO - implement
-def parseADV_Batting(dataset):
-	pass
+def parseADV_Batting(dataset): pass
 
 # TODO - implement
-def parseADV_Pitching(dataset):
-	pass
+def parseADV_Pitching(dataset): pass
 
 
 """
@@ -87,15 +84,10 @@ def loadCsv(filename, statType=0):
 	dataset = np.array(list(csv.reader(open(filename,'rb'),delimiter=',')))
 	#print dataset
 
-	if statType == statTypes['STD-BATTING']:
-		return parseSTD_Batting(dataset)
-	elif statType == statTypes['STD-PITCHING']:
-		return parseSTD_Pitching(dataset)
-	elif statType == statTypes['ADV-BATTING']:
-		return parseADV_Batting(dataset)
-	elif statType == statTypes['ADV-PITCHING']:
-		return parseADV_Pitching(dataset)
-
+	if statType == statTypes['STD-BATTING']: return parseSTD_Batting(dataset)
+	elif statType == statTypes['STD-PITCHING']: return parseSTD_Pitching(dataset)
+	elif statType == statTypes['ADV-BATTING']: return parseADV_Batting(dataset)
+	elif statType == statTypes['ADV-PITCHING']: return parseADV_Pitching(dataset)
 
 
 
@@ -108,38 +100,52 @@ print('Loaded data file {0} with {1} players').format(filename, len(playerStats)
 print 'playerStatLabels: {0}'.format(statLabels)
 
 """
-	compare the age vs batting average - do regression, plot
+    compare the age vs batting average - do regression, plot
 """
 
 # select the age and BA data
+batter_ABs = playerStats[:, 3]
+batter_Hs = playerStats[:, 5]
 batter_ages = playerStats[:, 1]
-batting_avgs = playerStats[:, 14]
-print 'ages: {0}'.format(batter_ages)
-print 'BAs: {0}'.format(batting_avgs)
 
-# TODO filter out -1 data
+# FILTER out na batting avg, AB < 30, age > 15
+#batting_avgs = batting_avgs[np.logical_not(np.isnan(batting_avgs))]
+#batter_ages = batter_ages[np.logical_not(np.isnan(batting_avgs))]
+import itertools
+selector = filter(lambda x: not np.isnan(x) and x > 50, batter_ABs)
+
+batter_ABs = np.array(selector)
+batter_Hs = np.array(list(itertools.compress(batter_Hs, selector)))
+
+batter_ages = np.array(list(itertools.compress(batter_ages, selector)))
+batting_avgs = np.array(map(lambda x,y: x/y, batter_Hs, batter_ABs))
 
 
+print 'filtered ages: {0}'.format(batter_ages)
+print 'filtered BAs: {0}'.format(batting_avgs)
 
 # split into training, testing - 80:20 split
-### ages and net_worths need to be reshaped into 2D numpy arrays
-### second argument of reshape command is a tuple of integers: (n_rows, n_columns)
-### by convention, n_rows is the number of data points
-### and n_columns is the number of features
-#batter_ages_flat = numpy.reshape( numpy.array(batter_ages), (len(batter_ages), 1))
-#batting_avgs_flat = numpy.reshape( numpy.array(batter_avgs), (len(batter_avgs), 1))
-batter_ages_train, batter_ages_test, batting_avgs_train, batting_avgs_test = train_test_split(batter_ages, batting_avgs, test_size=0.2, random_state=42)
+# ages and net_worths need to be reshaped into 2D numpy arrays
+# second argument of reshape command is a tuple of integers: (n_rows, n_columns)
+# by convention, n_rows is the number of data points
+# and n_columns is the number of features
+batter_ages_flat = np.reshape( np.array(batter_ages), (len(batter_ages), 1))
+batting_avgs_flat = np.reshape( np.array(batting_avgs), (len(batting_avgs), 1))
+batter_ages_train, batter_ages_test, batting_avgs_train, batting_avgs_test = train_test_split(batter_ages_flat, batting_avgs_flat, test_size=0.2, random_state=42)
 
 reg = linear_model.LinearRegression()
-reg.fit( batter_ages_train, batting_avgs_train )
+reg.fit(batter_ages_train, batting_avgs_train)
 print 'slope:', reg.coef_
-print 'score on test data:', reg.score( batter_ages_test, batting_avgs_test )
+print 'score on test data:', reg.score(batter_ages_test, batting_avgs_test)
+
 
 # plot the linear regression
 
 try:
-    plt.plot(ages, reg.predict(ages), color="blue")
+    plt.plot(batter_ages_flat, reg.predict(batter_ages_flat), color="blue")
 except NameError:
     pass
-plt.scatter(ages, net_worths)
+plt.scatter(batter_ages_flat, batting_avgs_flat)
+plt.xlabel("ages")
+plt.ylabel("batting averages")
 plt.show()
