@@ -1,7 +1,6 @@
 """
-	on sample hitting data from 2014
-	- performing k-means clustering and visualize
-	- regression of age vs stats
+	on sample hitting data from 2010 - 2014
+	- performing regression of age vs stats
 
 """
 
@@ -13,6 +12,8 @@ from sklearn import linear_model
 from sklearn.cross_validation import train_test_split
 
 # constants dictionary
+from outlier_cleaner import outlierCleaner
+
 statTypes = {'STD-BATTING': 0, 'STD-PITCHING': 1, 'ADV-BATTING': 2, 'ADV-PITCHING': 3}
 
 
@@ -20,7 +21,6 @@ statTypes = {'STD-BATTING': 0, 'STD-PITCHING': 1, 'ADV-BATTING': 2, 'ADV-PITCHIN
 #############          PREPROCESSING        ##############
 ##########################################################
 def parseSTD_Batting(dataset):
-    # arrays to
     # print type(dataset)
     # have had to hard code number of players - FIX LATER
     playerStats = -1.0 * np.ones((1600,25))
@@ -99,6 +99,16 @@ print('Loaded data file {0} with {1} players').format(filename, len(playerStats)
 #print 'playerStats: {0}'.format(playerStats)
 print 'playerStatLabels: {0}'.format(statLabels)
 
+filename1 = 'data/std-batting-2013.csv'
+playerStats1, statLabels1, playerInfo1, infoLabels1 = loadCsv(filename1, 0)
+print('Loaded data file {0} with {1} players').format(filename1, len(playerStats1))
+
+filename2 = 'data/std-batting-2012.csv'
+playerStats2, statLabels2, playerInfo2, infoLabels2 = loadCsv(filename2, 0)
+print('Loaded data file {0} with {1} players').format(filename2, len(playerStats2))
+
+#playerStats =
+
 """
     compare the age vs batting average - do regression, plot
 """
@@ -109,8 +119,6 @@ batter_Hs = playerStats[:, 5]
 batter_ages = playerStats[:, 1]
 
 # FILTER out na batting avg, AB < 30, age > 15
-#batting_avgs = batting_avgs[np.logical_not(np.isnan(batting_avgs))]
-#batter_ages = batter_ages[np.logical_not(np.isnan(batting_avgs))]
 import itertools
 selector = filter(lambda x: not np.isnan(x) and x > 50, batter_ABs)
 
@@ -121,17 +129,21 @@ batter_ages = np.array(list(itertools.compress(batter_ages, selector)))
 batting_avgs = np.array(map(lambda x,y: x/y, batter_Hs, batter_ABs))
 
 
-print 'filtered ages: {0}'.format(batter_ages)
-print 'filtered BAs: {0}'.format(batting_avgs)
+#print 'filtered ages: {0}'.format(batter_ages)
+#print 'filtered BAs: {0}'.format(batting_avgs)
 
-# split into training, testing - 80:20 split
-# ages and net_worths need to be reshaped into 2D numpy arrays
-# second argument of reshape command is a tuple of integers: (n_rows, n_columns)
-# by convention, n_rows is the number of data points
-# and n_columns is the number of features
-batter_ages_flat = np.reshape( np.array(batter_ages), (len(batter_ages), 1))
-batting_avgs_flat = np.reshape( np.array(batting_avgs), (len(batting_avgs), 1))
-batter_ages_train, batter_ages_test, batting_avgs_train, batting_avgs_test = train_test_split(batter_ages_flat, batting_avgs_flat, test_size=0.2, random_state=42)
+
+# SPLIT into training, testing - 80:20 split
+batter_ages_flat = np.reshape(np.array(batter_ages), (len(batter_ages), 1))
+batting_avgs_flat = np.reshape(np.array(batting_avgs), (len(batting_avgs), 1))
+batter_ages_train, batter_ages_test, batting_avgs_train, batting_avgs_test = \
+    train_test_split(batter_ages_flat, batting_avgs_flat, test_size=0.2, random_state=42)
+
+
+
+##########################################################
+#############    TRAINING & PLOTTING        ##############
+##########################################################
 
 reg = linear_model.LinearRegression()
 reg.fit(batter_ages_train, batting_avgs_train)
@@ -139,7 +151,7 @@ print 'slope:', reg.coef_
 print 'score on test data:', reg.score(batter_ages_test, batting_avgs_test)
 
 
-# plot the linear regression
+# PLOT the linear regression
 
 try:
     plt.plot(batter_ages_flat, reg.predict(batter_ages_flat), color="blue")
@@ -149,3 +161,38 @@ plt.scatter(batter_ages_flat, batting_avgs_flat)
 plt.xlabel("ages")
 plt.ylabel("batting averages")
 plt.show()
+
+
+# identify and remove the most outlier-y points
+cleaned_data = []
+try:
+    predictions = reg.predict(batter_ages_train)
+    cleaned_data = outlierCleaner(predictions, batter_ages_train, batting_avgs_train)
+except NameError:
+    print "can't make predictions to use in identifying outliers"
+
+
+# only run this code if cleaned_data is returning data
+if len(cleaned_data) > 0:
+    ages, avgs, errors = zip(*cleaned_data)
+    ages = np.reshape(np.array(ages), (len(ages), 1))
+    avgs = np.reshape(np.array(avgs), (len(avgs), 1))
+
+    # refit the data
+    try:
+        reg.fit(ages, avgs)
+        print 'slope after outlier removal:', reg.coef_
+        print 'score on test data after outlier removal:', reg.score(batter_ages_test, batting_avgs_test)
+        plt.plot(ages, reg.predict(ages), color="blue")
+    except NameError:
+        print "you don't seem to have regression imported/created,"
+        print "   or else your regression object isn't named reg"
+        print "   either way, only draw the scatter plot of the cleaned data"
+    plt.scatter(ages, avgs)
+    plt.xlabel("ages")
+    plt.ylabel("BA")
+    plt.show()
+
+
+else:
+    print "outlierCleaner() is returning an empty list, no refitting to be done"
