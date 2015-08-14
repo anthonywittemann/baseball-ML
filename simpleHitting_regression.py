@@ -1,5 +1,5 @@
 """
-	on sample hitting data from 2010 - 2014
+	on sample hitting data from 2012 - 2014
 	- performing regression of age vs stats
 
 """
@@ -97,7 +97,7 @@ playerStats, statLabels, playerInfo, infoLabels = loadCsv(filename, 0)
 print('Loaded data file {0} with {1} players').format(filename, len(playerStats))
 
 #print 'playerStats: {0}'.format(playerStats)
-print 'playerStatLabels: {0}'.format(statLabels)
+#print 'playerStatLabels: {0}'.format(statLabels)
 
 filename1 = 'data/std-batting-2013.csv'
 playerStats1, statLabels1, playerInfo1, infoLabels1 = loadCsv(filename1, 0)
@@ -107,7 +107,12 @@ filename2 = 'data/std-batting-2012.csv'
 playerStats2, statLabels2, playerInfo2, infoLabels2 = loadCsv(filename2, 0)
 print('Loaded data file {0} with {1} players').format(filename2, len(playerStats2))
 
-#playerStats =
+# stack arrays vertically
+playerStats = np.vstack((playerStats, playerStats1))
+playerStats = np.vstack((playerStats, playerStats2))
+statLabels = np.vstack((statLabels, statLabels1))
+statLabels = np.vstack((statLabels, statLabels2))
+print len(playerStats[:, 0])
 
 """
     compare the age vs batting average - do regression, plot
@@ -118,9 +123,10 @@ batter_ABs = playerStats[:, 3]
 batter_Hs = playerStats[:, 5]
 batter_ages = playerStats[:, 1]
 
-# FILTER out na batting avg, AB < 30, age > 15
+# FILTER out na batting avg, AB < 30
 import itertools
-selector = filter(lambda x: not np.isnan(x) and x > 50, batter_ABs)
+selector = filter(lambda x: not np.isnan(x) and x > 60, batter_ABs)
+print 'number of filtered players: {0}'.format(len(selector))
 
 batter_ABs = np.array(selector)
 batter_Hs = np.array(list(itertools.compress(batter_Hs, selector)))
