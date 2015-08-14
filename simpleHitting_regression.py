@@ -123,9 +123,9 @@ batter_ABs = playerStats[:, 3]
 batter_Hs = playerStats[:, 5]
 batter_ages = playerStats[:, 1]
 
-# FILTER out na batting avg, AB < 30
+# FILTER out na batting avg, AB < 30, age > 15
 import itertools
-selector = filter(lambda x: not np.isnan(x) and x > 60, batter_ABs)
+selector = filter(lambda x: not np.isnan(x) and x > 30, batter_ABs)
 print 'number of filtered players: {0}'.format(len(selector))
 
 batter_ABs = np.array(selector)
@@ -134,6 +134,8 @@ batter_Hs = np.array(list(itertools.compress(batter_Hs, selector)))
 batter_ages = np.array(list(itertools.compress(batter_ages, selector)))
 batting_avgs = np.array(map(lambda x,y: x/y, batter_Hs, batter_ABs))
 
+batter_ages = batter_ages[np.logical_not(batter_ages < 16)]
+batting_avgs = np.array(list(itertools.compress(batting_avgs, batter_ages)))
 
 #print 'filtered ages: {0}'.format(batter_ages)
 #print 'filtered BAs: {0}'.format(batting_avgs)

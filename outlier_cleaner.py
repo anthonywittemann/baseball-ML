@@ -16,7 +16,7 @@ def outlierCleaner(predictions, predict_x, target_y):
 
     cleaned_data = zip(predict_x, target_y, error)
     cleaned_data = sorted(cleaned_data, key = lambda tup: tup[2])
-    cleaned_data = cleaned_data[:80]
+    cleaned_data = cleaned_data[:int(len(cleaned_data) * .8)] # remove 20% - outliers
 
     return cleaned_data
 
